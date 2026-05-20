@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
   output: 'ai-sidekick.output',
   history: 'ai-sidekick.history',
   autoCopyOpen: 'ai-sidekick.autoCopyOpen',
+  chatgptOpenMode: 'ai-sidekick.chatgptOpenMode',
   customTemplates: 'ai-sidekick.customTemplates',
   activeTab: 'ai-sidekick.activeTab'
 };

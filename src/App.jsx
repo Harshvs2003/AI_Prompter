@@ -19,6 +19,7 @@ function App() {
   const [output, setOutput] = usePersistentState(STORAGE_KEYS.output, '');
   const [history, setHistory] = usePersistentState(STORAGE_KEYS.history, []);
   const [autoCopyOpen, setAutoCopyOpen] = usePersistentState(STORAGE_KEYS.autoCopyOpen, true);
+  const [chatgptOpenMode, setChatgptOpenMode] = usePersistentState(STORAGE_KEYS.chatgptOpenMode, 'same-window');
   const [templates, setTemplates] = usePersistentState(STORAGE_KEYS.customTemplates, DEFAULT_TEMPLATES);
   const [activeTab, setActiveTab] = usePersistentState(STORAGE_KEYS.activeTab, 'sidekick');
 
@@ -71,12 +72,12 @@ function App() {
       await window.electronAPI.writeClipboardText(output);
       showToast('Copied latest prompt and opened ChatGPT');
     }
-    if (window.electronAPI.openChatGPTWindow) {
+    if (chatgptOpenMode === 'same-window' && window.electronAPI.openChatGPTWindow) {
       await window.electronAPI.openChatGPTWindow();
       return;
     }
     await window.electronAPI.openExternal(CHATGPT_URL);
-  }, [autoCopyOpen, output, showToast]);
+  }, [autoCopyOpen, output, showToast, chatgptOpenMode]);
 
   const quickPaste = useCallback(async () => {
     const text = await window.electronAPI.readClipboardText();
@@ -199,6 +200,21 @@ function App() {
                 onChange={(e) => setAutoCopyOpen(e.target.checked)}
                 className="h-4 w-4"
               />
+            </div>
+
+            <div className="flex items-center justify-between rounded-md border border-panelBorder bg-panelSoft px-2 py-2">
+              <label className="text-xs text-slate-300" htmlFor="chatgpt-open-mode">
+                Open ChatGPT in
+              </label>
+              <select
+                id="chatgpt-open-mode"
+                value={chatgptOpenMode}
+                onChange={(e) => setChatgptOpenMode(e.target.value)}
+                className="rounded border border-panelBorder bg-slate-800 px-2 py-1 text-xs text-slate-100 outline-none focus:border-accent"
+              >
+                <option value="same-window">Same GPT Window</option>
+                <option value="new-tab">New Browser Tab</option>
+              </select>
             </div>
 
             <PromptPreview
