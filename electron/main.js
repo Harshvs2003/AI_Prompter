@@ -14,6 +14,9 @@ app.commandLine.appendSwitch('use-gl', 'swiftshader');
 
 const isDev = !!process.env.VITE_DEV_SERVER_URL;
 const appName = 'AI Sidekick';
+const CHATGPT_URL = process.env.VITE_CHATGPT_URL || 'https://chatgpt.com';
+let sidekickWindow = null;
+let chatgptWindow = null;
 
 // Some locked-down Windows environments deny Electron's default cache location.
 // We pin userData + cache to app-specific writable folders before app is ready.
@@ -88,6 +91,34 @@ function createWindow() {
   return win;
 }
 
+function openOrFocusChatGPTWindow() {
+  if (chatgptWindow && !chatgptWindow.isDestroyed()) {
+    if (chatgptWindow.isMinimized()) chatgptWindow.restore();
+    chatgptWindow.show();
+    chatgptWindow.focus();
+    return;
+  }
+
+  chatgptWindow = new BrowserWindow({
+    width: 1200,
+    height: 860,
+    minWidth: 900,
+    minHeight: 640,
+    autoHideMenuBar: true,
+    backgroundColor: '#0b1220',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true
+    }
+  });
+
+  chatgptWindow.loadURL(CHATGPT_URL);
+  chatgptWindow.on('closed', () => {
+    chatgptWindow = null;
+  });
+}
+
 app.whenReady().then(() => {
   ipcMain.handle('window:minimize', (event) => {
     const current = BrowserWindow.fromWebContents(event.sender);
@@ -111,14 +142,20 @@ app.whenReady().then(() => {
     return true;
   });
 
-  const win = createWindow();
+  ipcMain.handle('chatgpt:open', () => {
+    openOrFocusChatGPTWindow();
+    return true;
+  });
+
+  sidekickWindow = createWindow();
 
   // Bring sidekick back quickly from anywhere.
   globalShortcut.register('CommandOrControl+Shift+Space', () => {
-    if (win.isMinimized()) win.restore();
-    if (!win.isVisible()) win.show();
-    win.focus();
-    win.setAlwaysOnTop(true, 'screen-saver');
+    if (!sidekickWindow || sidekickWindow.isDestroyed()) return;
+    if (sidekickWindow.isMinimized()) sidekickWindow.restore();
+    if (!sidekickWindow.isVisible()) sidekickWindow.show();
+    sidekickWindow.focus();
+    sidekickWindow.setAlwaysOnTop(true, 'screen-saver');
   });
 
   app.on('activate', () => {

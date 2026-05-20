@@ -71,6 +71,10 @@ function App() {
       await window.electronAPI.writeClipboardText(output);
       showToast('Copied latest prompt and opened ChatGPT');
     }
+    if (window.electronAPI.openChatGPTWindow) {
+      await window.electronAPI.openChatGPTWindow();
+      return;
+    }
     await window.electronAPI.openExternal(CHATGPT_URL);
   }, [autoCopyOpen, output, showToast]);
 
